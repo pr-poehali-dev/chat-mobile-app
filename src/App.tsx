@@ -1,7 +1,38 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
 type Tab = "chats" | "contacts" | "notifications" | "settings" | "about" | "profile";
+
+type Message = {
+  id: number;
+  text: string;
+  mine: boolean;
+  time: string;
+};
+
+const chatMessages: Record<number, Message[]> = {
+  1: [
+    { id: 1, text: "Привет! Как дела с проектом?", mine: false, time: "14:10" },
+    { id: 2, text: "Всё идёт по плану, заканчиваю последний блок", mine: true, time: "14:12" },
+    { id: 3, text: "Супер! Когда сможешь сдать?", mine: false, time: "14:15" },
+    { id: 4, text: "Думаю завтра к обеду всё готово будет", mine: true, time: "14:20" },
+    { id: 5, text: "Отлично, договорились!", mine: false, time: "14:32" },
+  ],
+  2: [
+    { id: 1, text: "Всем привет! Напоминаю про митинг", mine: false, time: "13:00" },
+    { id: 2, text: "Буду 👍", mine: true, time: "13:05" },
+    { id: 3, text: "Митинг завтра в 10:00", mine: false, time: "13:15" },
+  ],
+  3: [
+    { id: 1, text: "Мария, скинула тебе файлы на почту", mine: true, time: "11:30" },
+    { id: 2, text: "Получила, смотрю!", mine: false, time: "11:40" },
+    { id: 3, text: "Спасибо за помощь 🙏", mine: false, time: "11:48" },
+  ],
+  4: [{ id: 1, text: "Документы отправил", mine: false, time: "09:22" }],
+  5: [{ id: 1, text: "Ваш запрос №1245 обработан", mine: false, time: "Вчера" }],
+  6: [{ id: 1, text: "Когда сможешь созвониться?", mine: false, time: "Вчера" }],
+  7: [{ id: 1, text: "Проблема с подключением решена", mine: false, time: "Пн" }],
+};
 
 const chats = [
   { id: 1, name: "Алексей Морозов", message: "Отлично, договорились!", time: "14:32", unread: 2, online: true },
@@ -84,7 +115,109 @@ function Avatar({ name, size = "md", online }: { name: string; size?: "sm" | "md
   );
 }
 
-function ChatsTab() {
+function ChatScreen({ chat, onBack }: { chat: typeof chats[0]; onBack: () => void }) {
+  const [messages, setMessages] = useState<Message[]>(chatMessages[chat.id] || []);
+  const [input, setInput] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const send = () => {
+    const text = input.trim();
+    if (!text) return;
+    const now = new Date();
+    const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
+    setMessages((prev) => [...prev, { id: Date.now(), text, mine: true, time }]);
+    setInput("");
+  };
+
+  return (
+    <div className="flex flex-col h-full animate-slide-in-right">
+      {/* Chat header */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-shrink-0">
+        <button
+          onClick={onBack}
+          className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center transition-colors -ml-1"
+        >
+          <Icon name="ChevronLeft" size={20} className="text-foreground" />
+        </button>
+        <Avatar name={chat.name} size="sm" online={chat.online} />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold leading-tight truncate">{chat.name}</p>
+          <p className="text-[11px] text-muted-foreground leading-tight">
+            {chat.online ? "В сети" : "Не в сети"}
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          <button className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center transition-colors">
+            <Icon name="Phone" size={16} className="text-muted-foreground" />
+          </button>
+          <button className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center transition-colors">
+            <Icon name="MoreVertical" size={16} className="text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+        {messages.map((msg, i) => (
+          <div
+            key={msg.id}
+            className={`flex animate-fade-in ${msg.mine ? "justify-end" : "justify-start"}`}
+            style={{ animationDelay: `${i * 0.03}s` }}
+          >
+            <div
+              className={`max-w-[72%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
+                msg.mine
+                  ? "bg-foreground text-background rounded-br-sm"
+                  : "bg-secondary text-foreground rounded-bl-sm"
+              }`}
+            >
+              <p>{msg.text}</p>
+              <p className={`text-[10px] mt-0.5 text-right ${msg.mine ? "text-background/50" : "text-muted-foreground"}`}>
+                {msg.time}
+              </p>
+            </div>
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="flex-shrink-0 px-3 pb-3 pt-2 border-t border-border">
+        <div className="flex items-end gap-2">
+          <button className="w-9 h-9 rounded-full hover:bg-secondary flex items-center justify-center transition-colors flex-shrink-0">
+            <Icon name="Paperclip" size={18} className="text-muted-foreground" />
+          </button>
+          <div className="flex-1 bg-secondary rounded-2xl px-4 py-2.5 flex items-end gap-2 min-h-[40px]">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+              }}
+              placeholder="Сообщение..."
+              rows={1}
+              className="flex-1 bg-transparent text-sm outline-none resize-none placeholder:text-muted-foreground leading-relaxed"
+              style={{ maxHeight: "100px" }}
+            />
+          </div>
+          <button
+            onClick={send}
+            disabled={!input.trim()}
+            className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-80 flex-shrink-0"
+          >
+            <Icon name="Send" size={16} className="text-background" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChatsTab({ onOpenChat }: { onOpenChat: (chat: typeof chats[0]) => void }) {
   const [search, setSearch] = useState("");
   const filtered = chats.filter(
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.message.toLowerCase().includes(search.toLowerCase())
@@ -106,6 +239,7 @@ function ChatsTab() {
         {filtered.map((chat, i) => (
           <div
             key={chat.id}
+            onClick={() => onOpenChat(chat)}
             className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/60 cursor-pointer transition-colors animate-fade-in"
             style={{ animationDelay: `${i * 0.04}s` }}
           >
@@ -416,6 +550,7 @@ const tabTitles: Record<Tab, string> = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("chats");
+  const [openedChat, setOpenedChat] = useState<typeof chats[0] | null>(null);
 
   return (
     <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4">
@@ -432,59 +567,69 @@ export default function App() {
           </div>
         </div>
 
-        {/* Header */}
-        <div className="px-5 pt-2 pb-3 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight">{tabTitles[activeTab]}</h1>
-            {activeTab === "chats" && (
-              <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
-                <Icon name="Pencil" size={15} className="text-background" />
-              </button>
-            )}
-            {activeTab === "contacts" && (
-              <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
-                <Icon name="UserPlus" size={15} className="text-background" />
-              </button>
-            )}
+        {/* Header — скрываем если открыт чат */}
+        {!openedChat && (
+          <div className="px-5 pt-2 pb-3 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold tracking-tight">{tabTitles[activeTab]}</h1>
+              {activeTab === "chats" && (
+                <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
+                  <Icon name="Pencil" size={15} className="text-background" />
+                </button>
+              )}
+              {activeTab === "contacts" && (
+                <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
+                  <Icon name="UserPlus" size={15} className="text-background" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          {activeTab === "chats" && <ChatsTab />}
-          {activeTab === "contacts" && <ContactsTab />}
-          {activeTab === "notifications" && <NotificationsTab />}
-          {activeTab === "settings" && <SettingsTab />}
-          {activeTab === "about" && <AboutTab />}
-          {activeTab === "profile" && <ProfileTab />}
+          {openedChat ? (
+            <ChatScreen chat={openedChat} onBack={() => setOpenedChat(null)} />
+          ) : (
+            <>
+              {activeTab === "chats" && <ChatsTab onOpenChat={setOpenedChat} />}
+              {activeTab === "contacts" && <ContactsTab />}
+              {activeTab === "notifications" && <NotificationsTab />}
+              {activeTab === "settings" && <SettingsTab />}
+              {activeTab === "about" && <AboutTab />}
+              {activeTab === "profile" && <ProfileTab />}
+            </>
+          )}
         </div>
 
-        {/* Bottom Nav */}
-        <div className="flex-shrink-0 border-t border-border bg-background/95 px-2 pt-2 pb-5">
-          <div className="grid grid-cols-6 gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center gap-1 py-2 rounded-2xl transition-all ${
-                  activeTab === tab.id
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                <div className="relative">
-                  <Icon name={tab.icon} size={20} />
-                  {tab.badge && activeTab !== tab.id && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-foreground text-background text-[9px] font-bold rounded-full flex items-center justify-center">
-                      {tab.badge}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[9px] font-medium leading-none">{tab.label}</span>
-              </button>
-            ))}
+        {/* Bottom Nav — скрываем если открыт чат */}
+        {!openedChat && (
+          <div className="flex-shrink-0 border-t border-border bg-background/95 px-2 pt-2 pb-5">
+            <div className="grid grid-cols-6 gap-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex flex-col items-center gap-1 py-2 rounded-2xl transition-all ${
+                    activeTab === tab.id
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <div className="relative">
+                    <Icon name={tab.icon} size={20} />
+                    {tab.badge && activeTab !== tab.id && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-foreground text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                        {tab.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[9px] font-medium leading-none">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
