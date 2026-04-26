@@ -1,0 +1,20 @@
+{
+  "name": "dialog.online",
+  "short_name": "dialog",
+  "description": "Современный мессенджер",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fafafa",
+  "theme_color": "#141414",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "https://cdn.poehali.dev/projects/92efa6c6-638c-4e34-ba2b-106756dcd772/files/99048f1b-eb58-4d46-af0b-3ee84b397f05.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "communication"]
+}

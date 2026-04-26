@@ -553,84 +553,77 @@ export default function App() {
   const [openedChat, setOpenedChat] = useState<typeof chats[0] | null>(null);
 
   return (
-    <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4">
-      <div
-        className="w-full max-w-sm bg-background rounded-[2.5rem] shadow-2xl shadow-black/10 overflow-hidden flex flex-col"
-        style={{ height: "812px", maxHeight: "95vh" }}
-      >
-        {/* Status bar */}
-        <div className="flex items-center justify-between px-6 pt-4 pb-1 flex-shrink-0">
-          <span className="text-xs font-semibold" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>9:41</span>
-          <div className="flex items-center gap-1.5">
-            <Icon name="Wifi" size={13} className="text-foreground" />
-            <Icon name="Battery" size={13} className="text-foreground" />
+    <div className="h-screen w-screen bg-background flex flex-col overflow-hidden" style={{ maxWidth: "480px", margin: "0 auto" }}>
+
+      {/* Safe area top */}
+      <div className="flex-shrink-0" style={{ paddingTop: "env(safe-area-inset-top)" }} />
+
+      {/* Header — скрываем если открыт чат */}
+      {!openedChat && (
+        <div className="px-5 pt-4 pb-3 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold tracking-tight">{tabTitles[activeTab]}</h1>
+            {activeTab === "chats" && (
+              <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
+                <Icon name="Pencil" size={15} className="text-background" />
+              </button>
+            )}
+            {activeTab === "contacts" && (
+              <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
+                <Icon name="UserPlus" size={15} className="text-background" />
+              </button>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Header — скрываем если открыт чат */}
-        {!openedChat && (
-          <div className="px-5 pt-2 pb-3 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold tracking-tight">{tabTitles[activeTab]}</h1>
-              {activeTab === "chats" && (
-                <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
-                  <Icon name="Pencil" size={15} className="text-background" />
-                </button>
-              )}
-              {activeTab === "contacts" && (
-                <button className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center hover:opacity-80 transition-opacity">
-                  <Icon name="UserPlus" size={15} className="text-background" />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {openedChat ? (
-            <ChatScreen chat={openedChat} onBack={() => setOpenedChat(null)} />
-          ) : (
-            <>
-              {activeTab === "chats" && <ChatsTab onOpenChat={setOpenedChat} />}
-              {activeTab === "contacts" && <ContactsTab />}
-              {activeTab === "notifications" && <NotificationsTab />}
-              {activeTab === "settings" && <SettingsTab />}
-              {activeTab === "about" && <AboutTab />}
-              {activeTab === "profile" && <ProfileTab />}
-            </>
-          )}
-        </div>
-
-        {/* Bottom Nav — скрываем если открыт чат */}
-        {!openedChat && (
-          <div className="flex-shrink-0 border-t border-border bg-background/95 px-2 pt-2 pb-5">
-            <div className="grid grid-cols-6 gap-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex flex-col items-center gap-1 py-2 rounded-2xl transition-all ${
-                    activeTab === tab.id
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <div className="relative">
-                    <Icon name={tab.icon} size={20} />
-                    {tab.badge && activeTab !== tab.id && (
-                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-foreground text-background text-[9px] font-bold rounded-full flex items-center justify-center">
-                        {tab.badge}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[9px] font-medium leading-none">{tab.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Content */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {openedChat ? (
+          <ChatScreen chat={openedChat} onBack={() => setOpenedChat(null)} />
+        ) : (
+          <>
+            {activeTab === "chats" && <ChatsTab onOpenChat={setOpenedChat} />}
+            {activeTab === "contacts" && <ContactsTab />}
+            {activeTab === "notifications" && <NotificationsTab />}
+            {activeTab === "settings" && <SettingsTab />}
+            {activeTab === "about" && <AboutTab />}
+            {activeTab === "profile" && <ProfileTab />}
+          </>
         )}
       </div>
+
+      {/* Bottom Nav — скрываем если открыт чат */}
+      {!openedChat && (
+        <div className="flex-shrink-0 border-t border-border bg-background px-2 pt-2" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}>
+          <div className="grid grid-cols-6 gap-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center gap-1 py-2 rounded-2xl transition-all ${
+                  activeTab === tab.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}
+              >
+                <div className="relative">
+                  <Icon name={tab.icon} size={20} />
+                  {tab.badge && activeTab !== tab.id && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-foreground text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {tab.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[9px] font-medium leading-none">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Safe area bottom fallback */}
+      <div className="flex-shrink-0 bg-background" style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
     </div>
   );
 }
